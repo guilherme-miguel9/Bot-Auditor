@@ -33,27 +33,26 @@ O motor de validação processa cada linha da planilha de auditoria (Excel ou CS
 
 ---
 
-## 🖥️ Painel Desktop (GUI com Modo Escuro & Raised Glass)
+## 🖥️ Painel Desktop (GUI com PySide6 & Dark Navy Blue)
 
-O projeto conta com uma interface gráfica desktop interativa e moderna (`main.py`), construída com **CustomTkinter**, apresentando um layout estilo *Space-Grey & Coral Glow* (cards elevados, navegação em barra lateral e indicadores instantâneos de status).
+O projeto conta com uma interface gráfica desktop interativa e moderna (`main.py`), construída com **PySide6 (Qt6)**, apresentando um layout estilo *Dark Navy Blue & Glassmorphism* (cards elevados, navegação em barra lateral e indicadores instantâneos de status).
 
 ### Principais recursos da interface:
 1. **Seleção Simplificada:** Suporte nativo a arquivos Excel (`.xlsx`, `.xlsm` com macros, `.xls`) e `.csv`.
-2. **Processamento em Thread Dedicada:** Execução de auditorias complexas sobre mais de 100 mil linhas no fundo sem travar a interface visual.
+2. **Processamento em Thread Qt Dedicada (`ValidationWorker`):** Execução de auditorias complexas sobre mais de 100 mil linhas no fundo sem travar a interface visual.
 3. **Barra de Progresso e Métricas ao Vivo:** Exibição imediata da distribuição de todos os indicadores com *badges* coloridos e tempo de execução.
 4. **Gravação Automática:** Salva a planilha validada (`_VALIDADO.xlsx`) na mesma pasta do arquivo de origem.
-5. **Abertura em 1 Clique:** Botão para abrir o arquivo Excel validado imediatamente após a conclusão.
+5. **Abertura Cross-Platform em 1 Clique:** Botão para abrir o arquivo Excel validado ou pasta no Finder (macOS) / Explorer (Windows) via `QDesktopServices`.
 
 ---
 
-## 📦 Executável Standalone (`.exe`)
+## 📦 Executável Standalone (macOS / Linux / Windows)
 
-Para utilizar o sistema em computadores Windows **sem necessidade de instalar Python** ou qualquer biblioteca, o projeto compila todas as dependências em um único arquivo executável portátil via PyInstaller.
+Para utilizar o sistema em computadores sem necessidade de instalar Python ou qualquer biblioteca, o projeto compila todas as dependências em um arquivo executável portátil via PyInstaller.
 
-O arquivo executável pronto e compilado fica disponível na pasta `dist/`:
-```bash
-dist/Auditoria_Registros_Operacionais.exe
-```
+O arquivo executável compilado fica disponível na pasta `dist/`:
+- **macOS / Linux:** `dist/Auditoria_Registros_Operacionais`
+- **Windows:** `dist/Auditoria_Registros_Operacionais.exe`
 
 ---
 
@@ -61,9 +60,10 @@ dist/Auditoria_Registros_Operacionais.exe
 
 ```
 auditoria-registros-operacionais/
-├── main.py                  # Painel Desktop Interativo (CustomTkinter GUI)
-├── app_icon.ico             # Ícone do aplicativo para compilação Windows
-├── requirements.txt         # Dependências Python do projeto
+├── main.py                  # Painel Desktop Interativo (PySide6 GUI)
+├── assets/
+│   └── app_icon.ico         # Ícone oficial do aplicativo
+├── requirements.txt         # Dependências Python do projeto (PySide6, pandas, openpyxl, etc.)
 ├── README.md                # Documentação do sistema
 ├── README_VALIDACAO.md      # Manual detalhado e especificações técnicas de todas as notas
 ├── walkthrough.md           # Histórico de execuções e métricas validadas
@@ -71,7 +71,7 @@ auditoria-registros-operacionais/
 │   ├── validation_rules.py    # Motor com todas as regras operacionais de negócio e testes unitários
 │   └── validar_comentarios.py # Script CLI principal para auditoria em lote e manipulação de DataFrames
 └── dist/
-    └── Auditoria_Registros_Operacionais.exe  # Aplicativo executável autônomo compilado
+    └── Auditoria_Registros_Operacionais  # Aplicativo executável autônomo compilado
 ```
 
 ---
@@ -95,9 +95,25 @@ Para executar a auditoria diretamente pelo terminal sem abrir a interface gráfi
 python src/validar_comentarios.py --input "caminho/para/planilha.xlsm" --output "caminho/para/saida_VALIDADA.xlsx" --sheet "Aud_Coment_Geral" --analyze
 ```
 
-### 4. Compilar novo Executável (`.exe`)
-Para gerar um novo arquivo `.exe` após realizar alterações nas regras de negócio:
+### 4. Compilar Executável com PyInstaller (Cross-Platform)
+
+O PyInstaller gera um executável autônomo específico para a plataforma em que o comando é executado. Utilize o comando correspondente ao seu sistema operacional:
+
+#### 🍏 macOS
 ```bash
-python -m PyInstaller --noconsole --onefile --icon=app_icon.ico --name=Auditoria_Registros_Operacionais --collect-all customtkinter --add-data "src;src" main.py
+python3 -m PyInstaller --noconsole --onefile --icon=assets/app_icon.ico --name=Auditoria_Registros_Operacionais --add-data "src:src" --add-data "assets:assets" main.py
 ```
-O executável final será salvo na pasta `dist/Auditoria_Registros_Operacionais.exe`.
+*Gerado em `dist/Auditoria_Registros_Operacionais`.*
+
+#### 🐧 Linux
+```bash
+python3 -m PyInstaller --noconsole --onefile --icon=assets/app_icon.ico --name=Auditoria_Registros_Operacionais --add-data "src:src" --add-data "assets:assets" main.py
+```
+*Gerado em `dist/Auditoria_Registros_Operacionais`.*
+
+#### 🪟 Windows (PowerShell ou CMD)
+```cmd
+python -m PyInstaller --noconsole --onefile --icon=assets\app_icon.ico --name=Auditoria_Registros_Operacionais --add-data "src;src" --add-data "assets;assets" main.py
+```
+*(Nota: No Windows, a flag `--add-data` utiliza o ponto e vírgula `;` como separador de caminho, ao invés de dois pontos `:`).*
+*Gerado em `dist/Auditoria_Registros_Operacionais.exe`.*
