@@ -4,7 +4,7 @@ A **Auditoria de Registros Operacionais** é uma solução inteligente e automat
 
 ---
 
-## 🚀 Funcionalidades e Classificações de Auditoria
+## Funcionalidades e Classificações de Auditoria
 
 O motor de validação processa cada linha da planilha de auditoria (Excel ou CSV) e categoriza o comentário na coluna **`ANÁLISE`** em uma das 8 classificações operacionais:
 
@@ -23,7 +23,7 @@ O motor de validação processa cada linha da planilha de auditoria (Excel ou CS
 
 ---
 
-## ⚡ Diferenciais Técnicos e Regras Avançadas
+## Diferenciais Técnicos e Regras Avançadas
 
 * **Múltiplos Pares de Códigos e Leituras:** As notas de medidor/leitura (`P111`, `B111`, `T181`, `R111`, etc.) aceitam que 1 ou 2 medidores sejam acompanhados por múltiplos pares compostos pelo código/função de ocorrência (até 3 dígitos) e a respectiva leitura (até 6 dígitos), ex: `3203600940 3 012051 24 001929` ou `6252237400 03 999999 103 999999`.
 * **Prefixos `S`, `M`, `X`, `MV`, `NF` em Medidores e Postes:** Letras prefixadas a numerações operacionais fazem parte da nomenclatura oficial e são perfeitamente aceitas sem disparar erros de padrão (`CFP`). Postes em notas como `E101` aceitam tanto os formatos `M` e `X` quanto o formato **`S + 6 dígitos`** (ex: `s138628`).
@@ -33,7 +33,7 @@ O motor de validação processa cada linha da planilha de auditoria (Excel ou CS
 
 ---
 
-## 🖥️ Painel Desktop (GUI com PySide6 & Dark Navy Blue)
+## Painel Desktop (GUI com PySide6 & Dark Navy Blue)
 
 O projeto conta com uma interface gráfica desktop interativa e moderna (`main.py`), construída com **PySide6 (Qt6)**, apresentando um layout estilo *Dark Navy Blue & Glassmorphism* (cards elevados, navegação em barra lateral e indicadores instantâneos de status).
 
@@ -46,7 +46,7 @@ O projeto conta com uma interface gráfica desktop interativa e moderna (`main.p
 
 ---
 
-## 📦 Executável Standalone (macOS / Linux / Windows)
+## Executável Standalone (macOS / Linux / Windows)
 
 Para utilizar o sistema em computadores sem necessidade de instalar Python ou qualquer biblioteca, o projeto compila todas as dependências em um arquivo executável portátil via PyInstaller.
 
@@ -56,7 +56,7 @@ O arquivo executável compilado fica disponível na pasta `dist/`:
 
 ---
 
-## 🛠️ Estrutura do Projeto
+## Estrutura do Projeto
 
 ```
 auditoria-registros-operacionais/
@@ -76,7 +76,7 @@ auditoria-registros-operacionais/
 
 ---
 
-## 💻 Como Executar via Código Python
+## Como Executar via Código Python
 
 ### 1. Requisitos
 Certifique-se de ter o Python 3.10+ instalado e instale as dependências:
@@ -99,19 +99,19 @@ python src/validar_comentarios.py --input "caminho/para/planilha.xlsm" --output 
 
 O PyInstaller gera um executável autônomo específico para a plataforma em que o comando é executado. Utilize o comando correspondente ao seu sistema operacional:
 
-#### 🍏 macOS
+#### macOS
 ```bash
 python3 -m PyInstaller --noconsole --onefile --icon=assets/app_icon.ico --name=Auditoria_Registros_Operacionais --add-data "src:src" --add-data "assets:assets" main.py
 ```
 *Gerado em `dist/Auditoria_Registros_Operacionais`.*
 
-#### 🐧 Linux
+#### Linux
 ```bash
 python3 -m PyInstaller --noconsole --onefile --icon=assets/app_icon.ico --name=Auditoria_Registros_Operacionais --add-data "src:src" --add-data "assets:assets" main.py
 ```
 *Gerado em `dist/Auditoria_Registros_Operacionais`.*
 
-#### 🪟 Windows (PowerShell ou CMD)
+#### Windows (PowerShell ou CMD)
 ```cmd
 python -m PyInstaller --noconsole --onefile --icon=assets\app_icon.ico --name=Auditoria_Registros_Operacionais --add-data "src;src" --add-data "assets;assets" main.py
 ```

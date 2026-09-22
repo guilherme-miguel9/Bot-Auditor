@@ -9,7 +9,7 @@ from PySide6.QtWidgets import (
     QStackedWidget, QScrollArea, QFileDialog, QMessageBox, QSizePolicy
 )
 from PySide6.QtCore import Qt, QThread, Signal, QUrl
-from PySide6.QtGui import QFont, QIcon, QDesktopServices
+from PySide6.QtGui import QFont, QIcon, QDesktopServices, QPixmap
 
 # Adicionar o diretório raiz e o subdiretório src ao PATH de forma segura para PyInstaller e dev
 base_dir = os.path.dirname(os.path.abspath(__file__))
@@ -187,7 +187,7 @@ class ValidationWorker(QThread):
 
             self.progress_signal.emit(
                 1.00,
-                f"✔ Auditoria Concluída com Sucesso em {elapsed}s!",
+                f"Auditoria Concluída com Sucesso em {elapsed}s!",
                 detalhe_concluido
             )
 
@@ -299,15 +299,16 @@ class AuditorComentariosApp(QMainWindow):
         logo_layout.setContentsMargins(4, 0, 4, 10)
         logo_layout.setSpacing(12)
 
-        icon_lbl = QLabel("⬡", sidebar_frame)
+        icon_lbl = QLabel(sidebar_frame)
         icon_lbl.setFixedSize(42, 42)
         icon_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        icon_path = os.path.join(base_dir, 'assets', 'app_icon.ico')
+        if os.path.exists(icon_path):
+            pix = QPixmap(icon_path).scaled(28, 28, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
+            icon_lbl.setPixmap(pix)
         icon_lbl.setStyleSheet("""
             QLabel {
                 background-color: #1E2A4A;
-                color: #3B82F6;
-                font-size: 24px;
-                font-weight: bold;
                 border-radius: 12px;
                 border: none;
             }
@@ -330,9 +331,9 @@ class AuditorComentariosApp(QMainWindow):
         # Navigation Buttons
         self.nav_buttons = {}
         nav_configs = [
-            ("visao_geral", "⚡ Visão Geral"),
-            ("planilhas", "📁 Planilha & Pastas"),
-            ("historico", "📊 Histórico Auditoria"),
+            ("visao_geral", "Visão Geral"),
+            ("planilhas", "Planilha & Pastas"),
+            ("historico", "Histórico de Auditoria"),
         ]
 
         for tab_id, text in nav_configs:
@@ -452,7 +453,7 @@ class AuditorComentariosApp(QMainWindow):
         """)
         input_row.addWidget(self.file_entry, stretch=1)
 
-        select_btn = QPushButton("📁 Selecionar Planilha", file_card)
+        select_btn = QPushButton("Selecionar Planilha", file_card)
         select_btn.setFixedSize(175, 46)
         select_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         select_btn.setStyleSheet("""
@@ -579,7 +580,7 @@ class AuditorComentariosApp(QMainWindow):
         footer_layout = QHBoxLayout()
         footer_layout.setSpacing(14)
 
-        self.action_btn = QPushButton("▶ Executar Auditoria e Gerar Planilha", container)
+        self.action_btn = QPushButton("Executar Auditoria e Gerar Planilha", container)
         self.action_btn.setFixedHeight(52)
         self.action_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         self.action_btn.setStyleSheet("""
@@ -602,7 +603,7 @@ class AuditorComentariosApp(QMainWindow):
         self.action_btn.clicked.connect(self._start_validation_thread)
         footer_layout.addWidget(self.action_btn, stretch=1)
 
-        self.open_excel_btn = QPushButton("📁 Abrir Planilha Validada", container)
+        self.open_excel_btn = QPushButton("Abrir Planilha Validada", container)
         self.open_excel_btn.setFixedHeight(52)
         self.open_excel_btn.setFixedWidth(210)
         self.open_excel_btn.setCursor(Qt.CursorShape.PointingHandCursor)
@@ -669,7 +670,7 @@ class AuditorComentariosApp(QMainWindow):
         card_layout.addWidget(self.planilha_info_lbl)
 
         btn_box = QHBoxLayout()
-        open_folder_btn = QPushButton("📂 Abrir Pasta de Destino no Finder / Explorer", card)
+        open_folder_btn = QPushButton("Abrir Pasta de Destino no Explorer", card)
         open_folder_btn.setFixedHeight(44)
         open_folder_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         open_folder_btn.setStyleSheet("""
@@ -700,9 +701,9 @@ class AuditorComentariosApp(QMainWindow):
     def _update_planilha_info(self):
         if self.selected_file_path:
             info_text = (
-                f"📄 Arquivo Origem:\n{self.selected_file_path}\n\n"
-                f"📑 Aba Excel Selecionada:\n{self.sheet_name}\n\n"
-                f"💾 Arquivo Validado a Gerar:\n{self.output_file_path}"
+                f"Arquivo Origem:\n{self.selected_file_path}\n\n"
+                f"Aba Excel Selecionada:\n{self.sheet_name}\n\n"
+                f"Arquivo Validado a Gerar:\n{self.output_file_path}"
             )
             self.planilha_info_lbl.setText(info_text)
             self.planilha_info_lbl.setStyleSheet("color: #D8DBE8; font-size: 13px; border: none; background: transparent;")
@@ -743,10 +744,10 @@ class AuditorComentariosApp(QMainWindow):
     def _update_historico_view(self):
         if self.last_total_rows > 0:
             msg = (
-                f"🕒 Última Execução Realizada em: {self.last_run_time}\n\n"
-                f"📊 Total de Linhas Analisadas: {self.last_total_rows:,} comentários\n"
-                f"⚡ Tempo Total de Processamento: {self.last_elapsed_secs} segundos\n"
-                f"📁 Planilha de Saída Gravada: {self.output_file_path}"
+                f"Última Execução Realizada em: {self.last_run_time}\n\n"
+                f"Total de Linhas Analisadas: {self.last_total_rows:,} comentários\n"
+                f"Tempo Total de Processamento: {self.last_elapsed_secs} segundos\n"
+                f"Planilha de Saída Gravada: {self.output_file_path}"
             )
             self.historico_txt_lbl.setText(msg)
             self.historico_txt_lbl.setStyleSheet("color: #D8DBE8; font-size: 14px; border: none; background: transparent;")
@@ -800,7 +801,7 @@ class AuditorComentariosApp(QMainWindow):
 
         self.is_processing = True
         self.action_btn.setEnabled(False)
-        self.action_btn.setText("⏳ Processando Regras Operacionais...")
+        self.action_btn.setText("Processando Regras Operacionais...")
         self.open_excel_btn.setEnabled(False)
 
         self.progress_bar.setValue(10)
@@ -822,7 +823,7 @@ class AuditorComentariosApp(QMainWindow):
     def _on_worker_success(self, dist, elapsed, out_path, total_rows):
         self.is_processing = False
         self.action_btn.setEnabled(True)
-        self.action_btn.setText("▶ Executar Auditoria e Gerar Planilha")
+        self.action_btn.setText("Executar Auditoria e Gerar Planilha")
 
         self.open_excel_btn.setEnabled(True)
         self.open_excel_btn.setStyleSheet("""
@@ -839,7 +840,7 @@ class AuditorComentariosApp(QMainWindow):
             }
         """)
 
-        self.status_lbl.setText(f"✔ Auditoria Concluída com Sucesso em {elapsed}s!")
+        self.status_lbl.setText(f"Auditoria Concluída com Sucesso em {elapsed}s!")
         self.status_lbl.setStyleSheet("color: #2ECC71; font-size: 14px; font-weight: bold; border: none; background: transparent;")
         self.progress_detail_lbl.setText(f"Planilha gravada perfeitamente em: {out_path}")
 
@@ -870,7 +871,7 @@ class AuditorComentariosApp(QMainWindow):
     def _on_worker_error(self, error_message):
         self.is_processing = False
         self.action_btn.setEnabled(True)
-        self.action_btn.setText("▶ Executar Auditoria e Gerar Planilha")
+        self.action_btn.setText("Executar Auditoria e Gerar Planilha")
 
         self.status_lbl.setText("Erro ao processar planilha")
         self.status_lbl.setStyleSheet("color: #E74C3C; font-size: 14px; font-weight: bold; border: none; background: transparent;")
