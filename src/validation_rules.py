@@ -258,6 +258,8 @@ class CommentValidator:
 def aplicar_validacao(df: pd.DataFrame, coluna_comentario: Optional[str] = None, coluna_nota: Optional[str] = None, coluna_analise: Optional[str] = None) -> pd.DataFrame:
     """
     Aplica validação em um DataFrame inteiro.
+    Cláusula de restrição: o bot não roda em análises já feitas.
+    Apenas realiza análises nas linhas em que o campo 'ANÁLISE' estiver vazio.
     """
     validator = CommentValidator()
     
@@ -274,19 +276,42 @@ def aplicar_validacao(df: pd.DataFrame, coluna_comentario: Optional[str] = None,
     if nota_col is None or coment_col is None:
         raise ValueError(f"Colunas não encontradas. nota_col={nota_col}, coment_col={coment_col}. Colunas disponíveis: {df.columns.tolist()}")
 
+    # Identificar coluna de análise existente
+    analise_col = coluna_analise
+    if analise_col is None or analise_col not in df.columns:
+        for col in df.columns:
+            if 'analise' in col.lower() or 'análise' in col.lower():
+                analise_col = col
+                break
     
+    def _is_vazio(val) -> bool:
+        if val is None or pd.isna(val):
+            return True
+        s = str(val).strip()
+        return s == "" or s.lower() in ["nan", "none", "null", "<na>"]
+
     resultados = []
     for _, row in df.iterrows():
-        nota = str(row.get(nota_col, '')).strip()
-        comentario = row.get(coment_col, '')
-        
-        if pd.notna(row.get('ANÁLISE')):
-            resultados.append(row['ANÁLISE'])
+        # Verificar se o campo de análise já possui valor preenchido
+        analise_previa = None
+        if analise_col is not None and analise_col in df.columns:
+            val = row.get(analise_col)
+            if not _is_vazio(val):
+                analise_previa = val
+
+        if analise_previa is not None:
+            # Preserva a análise existente sem reexecutar o validador
+            resultados.append(analise_previa)
         else:
+            # Campo vazio: o bot realiza a análise do comentário
+            nota = str(row.get(nota_col, '')).strip()
+            comentario = row.get(coment_col, '')
             analise = validator.validar_comentario(nota, comentario)
             resultados.append(analise)
     
     df_copy = df.copy()
+    if analise_col is not None and analise_col in df_copy.columns and analise_col != 'ANÁLISE':
+        df_copy = df_copy.drop(columns=[analise_col])
     df_copy['ANÁLISE'] = resultados
     return df_copy
 
@@ -328,9 +353,32 @@ if __name__ == "__main__":
         ("E101", "s138629", "C") # Nomenclatura de poste com S + 6 dígitos -> C
     ]
     
-    print("Testes de validacao:")
+    print("Testes de validacao de regras:")
+    todos_ok = True
     for nota, comentario, esperado in test_cases:
         resultado = validator.validar_comentario(nota, comentario)
         status = "[OK]" if resultado == esperado else "[FAIL]"
+        if resultado != esperado:
+            todos_ok = False
         print(f"{status} Nota: {nota}, Comentario: '{comentario}' -> {resultado} (esperado: {esperado})")
+    
+    print("\nTestes de restricao de execucao (aplicar_validacao apenas em vazios):")
+    df_teste = pd.DataFrame({
+        "Nota_leit": ["B111", "B111", "B111", "E101"],
+        "Coment_leitura": ["", "", "12345 67890", ""],
+        "ANÁLISE": ["ANALISE_ANTERIOR_PRESERVADA", None, "", "CFP_MANUAL"]
+    })
+    
+    df_resultado = aplicar_validacao(df_teste)
+    # Linha 0: tinha "ANALISE_ANTERIOR_PRESERVADA" -> deve manter "ANALISE_ANTERIOR_PRESERVADA" (mesmo coment sendo "")
+    # Linha 1: tinha None -> bot analisa e gera "SC"
+    # Linha 2: tinha "" -> bot analisa e gera "C"
+    # Linha 3: tinha "CFP_MANUAL" -> deve manter "CFP_MANUAL"
+    
+    assert df_resultado.loc[0, "ANÁLISE"] == "ANALISE_ANTERIOR_PRESERVADA", f"Esperado ANALISE_ANTERIOR_PRESERVADA, obteve {df_resultado.loc[0, 'ANÁLISE']}"
+    assert df_resultado.loc[1, "ANÁLISE"] == "SC", f"Esperado SC, obteve {df_resultado.loc[1, 'ANÁLISE']}"
+    assert df_resultado.loc[2, "ANÁLISE"] == "C", f"Esperado C, obteve {df_resultado.loc[2, 'ANÁLISE']}"
+    assert df_resultado.loc[3, "ANÁLISE"] == "CFP_MANUAL", f"Esperado CFP_MANUAL, obteve {df_resultado.loc[3, 'ANÁLISE']}"
+    print("[OK] Teste de restricao de execucao concluido com sucesso!")
+
 

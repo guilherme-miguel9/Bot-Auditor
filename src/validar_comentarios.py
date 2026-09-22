@@ -90,21 +90,24 @@ def validar_arquivo(caminho_entrada, caminho_saida, aba_excel=None, header_row=0
         print(f"Coluna de análise encontrada: {analise_col}")
         # Renomear para padronizar
         df = df.rename(columns={analise_col: 'ANÁLISE'})
-        # Limpar a análise original para aplicar validação, exceto para L121
-        if nota_col is not None:
-            df.loc[df[nota_col].astype(str).str.strip() != 'L121', 'ANÁLISE'] = None
-        else:
-            df['ANÁLISE'] = None
+        analise_col = 'ANÁLISE'
     
-    # Estatísticas antes da validação
+    # Estatísticas antes da validação (cláusula de restrição: apenas vazios são analisados)
+    def _is_vazio_series(s):
+        return s.isna() | (s.astype(str).str.strip() == '') | (s.astype(str).str.strip().str.lower().isin(['nan', 'none', 'null', '<na>']))
+
+    mask_vazio = _is_vazio_series(df['ANÁLISE'])
+    linhas_vazias = int(mask_vazio.sum())
+    linhas_preenchidas = len(df) - linhas_vazias
+
     print("\n=== Estatísticas antes da validação ===")
     print(f"Total de linhas: {len(df)}")
-    print(f"Linhas com ANÁLISE preenchida: {df['ANÁLISE'].notnull().sum()}")
-    print(f"Linhas com ANÁLISE vazia: {df['ANÁLISE'].isnull().sum()}")
+    print(f"Linhas com ANÁLISE já preenchida (serão preservadas): {linhas_preenchidas}")
+    print(f"Linhas com ANÁLISE vazia (serão analisadas pelo bot): {linhas_vazias}")
     
-    if df['ANÁLISE'].notnull().any():
-        print("\nDistribuição atual de ANÁLISE:")
-        print(df['ANÁLISE'].value_counts())
+    if linhas_preenchidas > 0:
+        print("\nDistribuição das análises existentes (mantidas):")
+        print(df.loc[~mask_vazio, 'ANÁLISE'].value_counts())
     
     # Aplicar validação
     print("\n=== Aplicando validação baseada em regras ===")

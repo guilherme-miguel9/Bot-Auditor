@@ -116,12 +116,6 @@ class ValidationWorker(QThread):
                     df = pd.read_csv(self.file_path, sep=';', dtype={"Nº_Serie": str})
                 df.columns = [str(col).strip().replace('\n', '').replace('\r', '').replace('.', '').replace(' ', '_') for col in df.columns]
 
-            self.progress_signal.emit(
-                0.50,
-                f"Analisando {len(df):,} comentários com Regras Operacionais...",
-                "Verificando prefixos S, notas no texto, limites e formatações de poste..."
-            )
-
             analise_col = None
             for col in df.columns:
                 if 'analise' in col.lower() or 'análise' in col.lower():
@@ -140,10 +134,27 @@ class ValidationWorker(QThread):
             else:
                 df = df.rename(columns={analise_col: 'ANÁLISE'})
                 analise_col = 'ANÁLISE'
-                if nota_col is not None:
-                    df.loc[df[nota_col].astype(str).str.strip() != 'L121', 'ANÁLISE'] = None
-                else:
-                    df['ANÁLISE'] = None
+
+            # Cláusula de restrição: o bot só analisa registros onde o campo 'ANÁLISE' estiver vazio
+            def _is_vazio_series(s):
+                return s.isna() | (s.astype(str).str.strip() == '') | (s.astype(str).str.strip().str.lower().isin(['nan', 'none', 'null', '<na>']))
+
+            mask_vazio = _is_vazio_series(df['ANÁLISE'])
+            total_pendentes = int(mask_vazio.sum())
+            total_mantidos = len(df) - total_pendentes
+
+            if total_mantidos > 0:
+                status_msg = f"Analisando {total_pendentes:,} registros pendentes..."
+                detalhe_msg = f"{total_mantidos:,} análises pré-existentes preservadas intactas."
+            else:
+                status_msg = f"Analisando {len(df):,} comentários com Regras Operacionais..."
+                detalhe_msg = "Verificando prefixos S, notas no texto, limites e formatações de poste..."
+
+            self.progress_signal.emit(
+                0.50,
+                status_msg,
+                detalhe_msg
+            )
 
             # Aplicar validação por regras de forma resiliente
             func_val = aplicar_validacao_func
@@ -169,10 +180,15 @@ class ValidationWorker(QThread):
             elapsed = round(time.time() - start_time, 1)
             dist = df['ANÁLISE'].value_counts().to_dict()
 
+            if total_mantidos > 0:
+                detalhe_concluido = f"Concluído! {total_pendentes:,} analisados, {total_mantidos:,} mantidos. Salvo em: {self.output_path}"
+            else:
+                detalhe_concluido = f"Planilha gravada perfeitamente em: {self.output_path}"
+
             self.progress_signal.emit(
                 1.00,
                 f"✔ Auditoria Concluída com Sucesso em {elapsed}s!",
-                f"Planilha gravada perfeitamente em: {self.output_path}"
+                detalhe_concluido
             )
 
             self.success_signal.emit(dist, elapsed, self.output_path, len(df))
